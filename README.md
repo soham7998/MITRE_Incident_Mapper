@@ -5,7 +5,6 @@ Upload a security log or connect your SIEM and get a full MITRE ATT&CK-mapped in
 **Live:** https://mitre-incident-mapper.vercel.app  
 **Integrations:** https://mitre-incident-mapper.vercel.app/integrations  
 **API Docs:** https://mitre-incident-mapper.vercel.app/docs  
-**API:** https://mitreincident-product.up.railway.app
 
 ---
 
