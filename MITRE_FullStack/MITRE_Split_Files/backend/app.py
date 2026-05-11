@@ -10,8 +10,6 @@ import json
 import csv
 import re
 import requests as req
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-req.packages.urllib3.disable_warnings(InsecureRequestWarning)
 from datetime import datetime
 from io import BytesIO, StringIO
 import uuid
