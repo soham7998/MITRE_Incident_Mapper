@@ -200,10 +200,6 @@ Expected output:
 - **GitHub:** https://github.com/soham7998/MITRE_Incident_Mapper
 - **LinkedIn:** https://linkedin.com/in/shahsoham2003
 
-## 📄 License
 
-MIT License — feel free to use and modify
 
----
-
-**Built by [Soham Shah](https://linkedin.com/in/shahsoham2003)** | Cybersecurity Engineer | L2 SOC Analyst
+**Built by [Soham Shah](https://linkedin.com/in/shahsoham2003)** | Cybersecurity Engineer |  SOC Analyst
