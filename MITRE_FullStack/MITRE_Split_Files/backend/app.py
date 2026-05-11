@@ -238,7 +238,7 @@ def process_events(events, source_label='file', filename=None):
 def root():
     return jsonify({
         'service': 'MITRE Incident Mapper API',
-        'version': '1.2.0',
+        'version': '1.3.0',
         'storage': 'mongodb' if USE_MONGO else 'memory',
         'status': 'running',
         'endpoints': {
