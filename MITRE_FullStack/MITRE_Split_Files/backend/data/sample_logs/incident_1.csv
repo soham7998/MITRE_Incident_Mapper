@@ -1,0 +1,16 @@
+timestamp,source,event_description
+2024-05-10 14:23:15,Splunk,Suspicious email with malicious attachment detected from external domain
+2024-05-10 14:24:02,Windows Event Log,PowerShell.exe process spawned with suspicious base64 encoded arguments
+2024-05-10 14:24:45,Cloudflare WAF,HTTP request with encoded payload blocked from internal IP
+2024-05-10 14:25:12,Windows Event Log,File created in temp folder: encrypted_payload.exe
+2024-05-10 14:25:50,EDR Agent,Mimikatz detected - credential dumping tool execution on endpoint
+2024-05-10 14:26:15,Windows Event Log,Registry Run key modified: HKLM\Software\Microsoft\Windows\CurrentVersion\Run
+2024-05-10 14:26:45,Network IDS,Outbound connection to known C2 domain: malicious-domain.ru on port 443
+2024-05-10 14:27:10,Windows Event Log,Tasklist command executed from cmd.exe
+2024-05-10 14:27:35,Splunk,Directory enumeration detected: dir /s C:\Users\
+2024-05-10 14:28:00,Windows Event Log,LSASS process accessed - possible credential theft
+2024-05-10 14:28:30,EDR Agent,Suspicious inter-process communication: PowerShell → WinRM
+2024-05-10 14:29:00,Windows Event Log,New network share created on endpoint
+2024-05-10 14:29:45,Splunk,Lateral movement detected - user accessing administrative shares on remote server
+2024-05-10 14:30:15,Splunk,Large data transfer detected on network to external IP address
+2024-05-10 14:31:00,Splunk,Windows Event Log clearing detected - wevtutil.exe executed with cl parameter
