@@ -15,54 +15,7 @@ from io import BytesIO, StringIO
 import uuid
 import urllib3
 
-_MONGO_URL = os.getenv('MONGODB_URL') or os.getenv('MONGO_URL') or os.getenv('MONGO_PRIVATE_URL')
-_col = None
-_mem = {}
-
-def _get_col():
-    global _col
-    if _col is not None:
-        return _col
-    if not _MONGO_URL:
-        return None
-    try:
-        from pymongo import MongoClient
-        client = MongoClient(_MONGO_URL, serverSelectionTimeoutMS=5000, connectTimeoutMS=5000)
-        col = client['mitre_mapper']['incidents']
-        col.create_index('incident_id', unique=True)
-        _col = col
-        return _col
-    except Exception as e:
-        print(f'MongoDB connect failed: {e}')
-        return None
-
-def _save(doc: dict):
-    col = _get_col()
-    if col is not None:
-        try:
-            col.replace_one({'incident_id': doc['incident_id']}, doc, upsert=True)
-            return
-        except Exception as e:
-            print(f'MongoDB write failed: {e}')
-    _mem[doc['incident_id']] = doc
-
-def _load(incident_id: str):
-    col = _get_col()
-    if col is not None:
-        try:
-            return col.find_one({'incident_id': incident_id}, {'_id': 0})
-        except Exception:
-            pass
-    return _mem.get(incident_id)
-
-def _count():
-    col = _get_col()
-    if col is not None:
-        try:
-            return col.count_documents({})
-        except Exception:
-            pass
-    return len(_mem)
+incidents = {}
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -212,7 +165,7 @@ def process_events(events, source_label='file', filename=None):
 
     timeline = timeline_builder.build_timeline(processed_events)
 
-    _save({
+    incidents[incident_id] = {
         'incident_id': incident_id,
         'source': source_label,
         'filename': filename or source_label,
@@ -220,7 +173,7 @@ def process_events(events, source_label='file', filename=None):
         'events': processed_events,
         'timeline': timeline,
         'mitre_techniques': list(mitre_techniques.values()),
-    })
+    }
 
     return jsonify({
         'incident_id': incident_id,
@@ -239,7 +192,6 @@ def root():
     return jsonify({
         'service': 'MITRE Incident Mapper API',
         'version': '1.3.0',
-        'storage': 'mongodb' if USE_MONGO else 'memory',
         'status': 'running',
         'endpoints': {
             'analyze':            'POST /api/analyze',
@@ -259,8 +211,7 @@ def health():
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.now().isoformat(),
-        'storage': 'mongodb' if USE_MONGO else 'memory',
-        'incidents_stored': _count()
+        'incidents_in_memory': len(incidents)
     })
 
 @app.route('/api/analyze', methods=['POST', 'OPTIONS'])
@@ -301,14 +252,14 @@ def analyze():
 
 @app.route('/api/incident/<incident_id>')
 def get_incident(incident_id):
-    doc = _load(incident_id)
+    doc = incidents.get(incident_id)
     if not doc:
         return jsonify({'error': 'Incident not found'}), 404
     return jsonify(doc), 200
 
 @app.route('/api/download/<incident_id>/<format>')
 def download(incident_id, format):
-    incident = _load(incident_id)
+    incident = incidents.get(incident_id)
     if not incident:
         return jsonify({'error': 'Incident not found'}), 404
 
