@@ -16,6 +16,7 @@ from src.mitre_mapper import MitreMapper
 from src.timeline_builder import TimelineBuilder, ReportGenerator
 
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB
 
 # Configure CORS for Vercel frontend
 CORS(app, resources={
@@ -248,6 +249,10 @@ def download(incident_id, format):
 @app.errorhandler(404)
 def not_found(e):
     return jsonify({'error': 'Endpoint not found'}), 404
+
+@app.errorhandler(413)
+def too_large(e):
+    return jsonify({'error': 'File too large. Maximum size is 10 MB.'}), 413
 
 @app.errorhandler(500)
 def server_error(e):

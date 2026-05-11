@@ -65,6 +65,10 @@ export default function Home() {
       setError(`Invalid file type. Use: ${validTypes.join(', ')}`);
       return;
     }
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      setError('File too large. Maximum size is 10 MB.');
+      return;
+    }
     setFile(selectedFile);
     setError(null);
     setResult(null);
@@ -193,7 +197,7 @@ export default function Home() {
                 <>
                   <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
                   <p className="text-lg font-medium text-slate-900 mb-1">Drop your log file here</p>
-                  <p className="text-sm text-slate-500">or click to browse — CSV, JSON, TXT, LOG</p>
+                  <p className="text-sm text-slate-500">or click to browse — CSV, JSON, TXT, LOG · max 10 MB</p>
                 </>
               )}
             </div>

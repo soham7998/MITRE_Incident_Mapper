@@ -132,7 +132,8 @@ export default function DocsPage() {
               Supported formats: <code className="bg-slate-100 px-1 rounded">.csv</code>{' '}
               <code className="bg-slate-100 px-1 rounded">.json</code>{' '}
               <code className="bg-slate-100 px-1 rounded">.txt</code>{' '}
-              <code className="bg-slate-100 px-1 rounded">.log</code>
+              <code className="bg-slate-100 px-1 rounded">.log</code>.{' '}
+              Max file size: <strong>10 MB</strong>.
             </p>
             <Code>{`curl -X POST ${BASE_URL}/api/analyze \\
   -F "file=@incident.csv"`}</Code>
@@ -238,6 +239,7 @@ curl -O ${BASE_URL}/api/download/INC-20250115103000-a1b2c3d4/csv`}</Code>
               {[
                 ['400', 'Bad request — missing file, wrong format, or unparseable content.'],
                 ['404', 'Incident ID not found (or server restarted and lost it).'],
+                ['413', 'File too large. Maximum upload size is 10 MB.'],
                 ['500', 'Something broke on our end. Try again.'],
               ].map(([code, msg]) => (
                 <tr key={code} className="border-t border-slate-100">
