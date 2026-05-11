@@ -57,7 +57,9 @@ const TACTIC_COLORS: Record<string, string> = {
 };
 
 export default function Home() {
+  const [inputMode, setInputMode] = useState<'file' | 'paste'>('file');
   const [file, setFile] = useState<File | null>(null);
+  const [pasteText, setPasteText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -88,18 +90,23 @@ export default function Home() {
   };
 
   const analyze = async () => {
-    if (!file) return;
     setLoading(true);
     setError(null);
-
-    const formData = new FormData();
-    formData.append('file', file);
-
     try {
-      const res = await fetch(`${API_URL}/api/analyze`, {
-        method: 'POST',
-        body: formData,
-      });
+      let res: Response;
+      if (inputMode === 'paste') {
+        if (!pasteText.trim()) return;
+        res = await fetch(`${API_URL}/api/integrations/raw`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ logs: pasteText, format: 'auto' }),
+        });
+      } else {
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('file', file);
+        res = await fetch(`${API_URL}/api/analyze`, { method: 'POST', body: formData });
+      }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Analysis failed');
       setResult(data);
@@ -117,9 +124,12 @@ export default function Home() {
 
   const reset = () => {
     setFile(null);
+    setPasteText('');
     setResult(null);
     setError(null);
   };
+
+  const canAnalyze = inputMode === 'file' ? !!file : pasteText.trim().length > 0;
 
   return (
     <div className="min-h-screen">
@@ -177,42 +187,72 @@ export default function Home() {
         {/* Upload Section */}
         {!result && (
           <div className="max-w-2xl mx-auto">
-            <div
-              onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-              onDragLeave={() => setDragActive(false)}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
-                dragActive
-                  ? 'border-blue-500 bg-blue-50'
-                  : file
-                  ? 'border-green-500 bg-green-50'
-                  : 'border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50/50'
-              }`}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.json,.txt,.log"
-                onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-                className="hidden"
-              />
-              {file ? (
-                <div className="flex items-center justify-center gap-3">
-                  <CheckCircle className="w-8 h-8 text-green-600" />
-                  <div className="text-left">
-                    <p className="font-medium text-slate-900">{file.name}</p>
-                    <p className="text-sm text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                  <p className="text-lg font-medium text-slate-900 mb-1">Drop your log file here</p>
-                  <p className="text-sm text-slate-500">or click to browse — CSV, JSON, TXT, LOG · max 15 MB</p>
-                </>
-              )}
+            {/* Mode tabs */}
+            <div className="flex gap-1 mb-4 bg-slate-100 rounded-lg p-1 w-fit">
+              {([['file', 'Upload File'], ['paste', 'Paste Events']] as const).map(([mode, label]) => (
+                <button
+                  key={mode}
+                  onClick={() => { setInputMode(mode); setError(null); }}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    inputMode === mode ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
+
+            {inputMode === 'file' ? (
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                onDragLeave={() => setDragActive(false)}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
+                  dragActive ? 'border-blue-500 bg-blue-50'
+                  : file ? 'border-green-500 bg-green-50'
+                  : 'border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50/50'
+                }`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,.json,.txt,.log"
+                  onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+                  className="hidden"
+                />
+                {file ? (
+                  <div className="flex items-center justify-center gap-3">
+                    <CheckCircle className="w-8 h-8 text-green-600" />
+                    <div className="text-left">
+                      <p className="font-medium text-slate-900">{file.name}</p>
+                      <p className="text-sm text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                    <p className="text-lg font-medium text-slate-900 mb-1">Drop your log file here</p>
+                    <p className="text-sm text-slate-500">or click to browse — CSV, JSON, TXT, LOG · max 15 MB</p>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="border border-slate-200 rounded-xl bg-white overflow-hidden">
+                <textarea
+                  value={pasteText}
+                  onChange={(e) => setPasteText(e.target.value)}
+                  rows={12}
+                  placeholder={`Paste log events here — one per line.\n\nExamples:\nJan 15 09:00:01 server sshd[1234]: Failed password for root from 192.168.1.1\nJan 15 09:01:23 server sudo: admin : COMMAND=/bin/bash\nCEF:0|Microsoft|Defender|1.0|1001|Malware Detected|8|src=10.0.0.5\n2025-01-15T09:02:00Z,endpoint.log,powershell.exe -enc base64encodedpayload`}
+                  className="w-full px-4 py-3 text-sm font-mono text-slate-800 placeholder-slate-400 resize-none focus:outline-none leading-relaxed"
+                />
+                {pasteText.trim() && (
+                  <div className="px-4 py-2 border-t border-slate-100 bg-slate-50 text-xs text-slate-400">
+                    {pasteText.trim().split('\n').filter(l => l.trim()).length} lines · supports syslog, CEF, CSV, plain text
+                  </div>
+                )}
+              </div>
+            )}
 
             {error && (
               <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
@@ -221,22 +261,16 @@ export default function Home() {
               </div>
             )}
 
-            {file && (
+            {canAnalyze && (
               <button
                 onClick={analyze}
                 disabled={loading}
-                className="mt-6 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                className="mt-4 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
               >
                 {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Analyzing...
-                  </>
+                  <><Loader2 className="w-5 h-5 animate-spin" />Analyzing...</>
                 ) : (
-                  <>
-                    <Target className="w-5 h-5" />
-                    Analyze with MITRE ATT&CK
-                  </>
+                  <><Target className="w-5 h-5" />Analyze with MITRE ATT&CK</>
                 )}
               </button>
             )}
