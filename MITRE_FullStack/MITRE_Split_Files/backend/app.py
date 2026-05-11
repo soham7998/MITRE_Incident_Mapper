@@ -15,38 +15,54 @@ from io import BytesIO, StringIO
 import uuid
 import urllib3
 
-try:
-    from pymongo import MongoClient
-    _MONGO_URL = os.getenv('MONGODB_URL') or os.getenv('MONGO_URL') or os.getenv('MONGO_PRIVATE_URL')
-    if _MONGO_URL:
-        _mongo = MongoClient(_MONGO_URL, serverSelectionTimeoutMS=3000)
-        _mongo.admin.command('ping')
-        _col = _mongo['mitre_mapper']['incidents']
-        _col.create_index('incident_id', unique=True)
-        USE_MONGO = True
-        print('MongoDB connected')
-    else:
-        USE_MONGO = False
-        print('MONGODB_URL not set — using in-memory storage')
-except Exception as e:
-    USE_MONGO = False
-    print(f'MongoDB unavailable ({e}) — using in-memory storage')
-
+_MONGO_URL = os.getenv('MONGODB_URL') or os.getenv('MONGO_URL') or os.getenv('MONGO_PRIVATE_URL')
+_col = None
 _mem = {}
 
+def _get_col():
+    global _col
+    if _col is not None:
+        return _col
+    if not _MONGO_URL:
+        return None
+    try:
+        from pymongo import MongoClient
+        client = MongoClient(_MONGO_URL, serverSelectionTimeoutMS=5000, connectTimeoutMS=5000)
+        col = client['mitre_mapper']['incidents']
+        col.create_index('incident_id', unique=True)
+        _col = col
+        return _col
+    except Exception as e:
+        print(f'MongoDB connect failed: {e}')
+        return None
+
 def _save(doc: dict):
-    if USE_MONGO:
-        _col.replace_one({'incident_id': doc['incident_id']}, doc, upsert=True)
-    else:
-        _mem[doc['incident_id']] = doc
+    col = _get_col()
+    if col is not None:
+        try:
+            col.replace_one({'incident_id': doc['incident_id']}, doc, upsert=True)
+            return
+        except Exception as e:
+            print(f'MongoDB write failed: {e}')
+    _mem[doc['incident_id']] = doc
 
 def _load(incident_id: str):
-    if USE_MONGO:
-        return _col.find_one({'incident_id': incident_id}, {'_id': 0})
+    col = _get_col()
+    if col is not None:
+        try:
+            return col.find_one({'incident_id': incident_id}, {'_id': 0})
+        except Exception:
+            pass
     return _mem.get(incident_id)
 
 def _count():
-    return _col.count_documents({}) if USE_MONGO else len(_mem)
+    col = _get_col()
+    if col is not None:
+        try:
+            return col.count_documents({})
+        except Exception:
+            pass
+    return len(_mem)
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
