@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Link from 'next/link';
 import {
   Shield, Upload, FileText, Download, Loader2, CheckCircle, AlertCircle,
   Target, Clock, Activity, ChevronRight, X, ExternalLink
@@ -124,14 +125,22 @@ export default function Home() {
               <p className="text-xs text-slate-500">Incident Timeline Analysis</p>
             </div>
           </div>
-          <a
-            href="https://github.com/soham7998/MITRE_Incident_Mapper"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-slate-600 hover:text-slate-900 flex items-center gap-1.5 font-medium"
-          >
-            GitHub <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/docs"
+              className="text-sm text-slate-600 hover:text-slate-900 font-medium"
+            >
+              API Docs
+            </Link>
+            <a
+              href="https://github.com/soham7998/MITRE_Incident_Mapper"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-slate-600 hover:text-slate-900 flex items-center gap-1.5 font-medium"
+            >
+              GitHub <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
         </div>
       </header>
 
