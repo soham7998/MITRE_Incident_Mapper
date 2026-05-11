@@ -86,13 +86,15 @@ export default function DocsPage() {
             <span className="text-slate-300">/</span>
             <span className="text-slate-500 text-sm">API Docs</span>
           </div>
-          <Link
-            href="/"
-            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to app
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/integrations" className="text-sm text-slate-500 hover:text-slate-900 transition-colors">
+              Integrations
+            </Link>
+            <Link href="/" className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 transition-colors">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Back to app
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -133,7 +135,7 @@ export default function DocsPage() {
               <code className="bg-slate-100 px-1 rounded">.json</code>{' '}
               <code className="bg-slate-100 px-1 rounded">.txt</code>{' '}
               <code className="bg-slate-100 px-1 rounded">.log</code>.{' '}
-              Max file size: <strong>10 MB</strong>.
+              Max file size: <strong>15 MB</strong>.
             </p>
             <Code>{`curl -X POST ${BASE_URL}/api/analyze \\
   -F "file=@incident.csv"`}</Code>
@@ -197,6 +199,7 @@ export default function DocsPage() {
             path="/api/download/:id/:format"
             description="Download the incident report. Format is pdf, json, or csv."
           >
+
             <Code>{`# PDF
 curl -O ${BASE_URL}/api/download/INC-20250115103000-a1b2c3d4/pdf
 
@@ -205,6 +208,58 @@ curl -O ${BASE_URL}/api/download/INC-20250115103000-a1b2c3d4/json
 
 # CSV
 curl -O ${BASE_URL}/api/download/INC-20250115103000-a1b2c3d4/csv`}</Code>
+          </Endpoint>
+        </Section>
+
+        <Section title="Integrations">
+          <p className="text-sm text-slate-600 mb-6">
+            All integration endpoints accept <code className="bg-slate-100 px-1 rounded">application/json</code> and return
+            the same response shape as <code className="bg-slate-100 px-1 rounded">/api/analyze</code>.
+            Credentials are never stored — they are used only for the duration of the request.
+          </p>
+
+          <Endpoint method="POST" path="/api/integrations/splunk" description="Query a Splunk search head via its REST API.">
+            <Code>{`curl -X POST ${BASE_URL}/api/integrations/splunk \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "url":   "https://splunk.company.com:8089",
+    "token": "your-bearer-token",
+    "query": "index=* sourcetype=syslog earliest=-1h",
+    "limit": 500
+  }'`}</Code>
+          </Endpoint>
+
+          <Endpoint method="POST" path="/api/integrations/elastic" description="Search an Elasticsearch or OpenSearch index.">
+            <Code>{`curl -X POST ${BASE_URL}/api/integrations/elastic \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "url":     "https://my-cluster.es.io:9200",
+    "api_key": "base64-api-key",
+    "index":   "logs-*",
+    "query":   "event.category:process",
+    "limit":   500
+  }'`}</Code>
+            <p className="text-xs text-slate-500 mt-2">Use <code className="bg-slate-100 px-1 rounded">username</code> + <code className="bg-slate-100 px-1 rounded">password</code> instead of <code className="bg-slate-100 px-1 rounded">api_key</code> for basic auth.</p>
+          </Endpoint>
+
+          <Endpoint method="POST" path="/api/integrations/cloudtrail" description="Analyze AWS CloudTrail Records[] JSON directly.">
+            <Code>{`curl -X POST ${BASE_URL}/api/integrations/cloudtrail \\
+  -H "Content-Type: application/json" \\
+  -d '{ "logs": { "Records": [ ... ] } }'
+
+# or upload a CloudTrail .json file
+curl -X POST ${BASE_URL}/api/integrations/cloudtrail \\
+  -F "file=@cloudtrail-2025-01-15.json"`}</Code>
+          </Endpoint>
+
+          <Endpoint method="POST" path="/api/integrations/raw" description="Paste raw syslog, CEF, LEEF, or plain text logs directly.">
+            <Code>{`curl -X POST ${BASE_URL}/api/integrations/raw \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "format": "syslog",
+    "logs": "Jan 15 09:00:01 server sshd[1234]: Failed password for root\\nJan 15 09:01:23 server sudo: COMMAND=/bin/bash"
+  }'`}</Code>
+            <p className="text-xs text-slate-500 mt-2"><code className="bg-slate-100 px-1 rounded">format</code> accepts <code className="bg-slate-100 px-1 rounded">auto</code>, <code className="bg-slate-100 px-1 rounded">syslog</code>, <code className="bg-slate-100 px-1 rounded">cef</code>, or <code className="bg-slate-100 px-1 rounded">text</code>. CEF lines starting with <code className="bg-slate-100 px-1 rounded">CEF:</code> are auto-detected.</p>
           </Endpoint>
         </Section>
 
@@ -239,7 +294,7 @@ curl -O ${BASE_URL}/api/download/INC-20250115103000-a1b2c3d4/csv`}</Code>
               {[
                 ['400', 'Bad request — missing file, wrong format, or unparseable content.'],
                 ['404', 'Incident ID not found (or server restarted and lost it).'],
-                ['413', 'File too large. Maximum upload size is 10 MB.'],
+                ['413', 'File too large. Maximum upload size is 15 MB.'],
                 ['500', 'Something broke on our end. Try again.'],
               ].map(([code, msg]) => (
                 <tr key={code} className="border-t border-slate-100">

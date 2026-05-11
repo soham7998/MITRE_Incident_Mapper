@@ -9,6 +9,12 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
+const ALL_TACTICS = [
+  'Initial Access', 'Execution', 'Persistence', 'Privilege Escalation',
+  'Defense Evasion', 'Credential Access', 'Discovery', 'Lateral Movement',
+  'Collection', 'Command and Control', 'Exfiltration', 'Impact',
+];
+
 interface MitreTechnique {
   id: string;
   tactic: string;
@@ -65,8 +71,8 @@ export default function Home() {
       setError(`Invalid file type. Use: ${validTypes.join(', ')}`);
       return;
     }
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      setError('File too large. Maximum size is 10 MB.');
+    if (selectedFile.size > 15 * 1024 * 1024) {
+      setError('File too large. Maximum size is 15 MB.');
       return;
     }
     setFile(selectedFile);
@@ -130,6 +136,12 @@ export default function Home() {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            <Link
+              href="/integrations"
+              className="text-sm text-slate-600 hover:text-slate-900 font-medium"
+            >
+              Integrations
+            </Link>
             <Link
               href="/docs"
               className="text-sm text-slate-600 hover:text-slate-900 font-medium"
@@ -197,7 +209,7 @@ export default function Home() {
                 <>
                   <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
                   <p className="text-lg font-medium text-slate-900 mb-1">Drop your log file here</p>
-                  <p className="text-sm text-slate-500">or click to browse — CSV, JSON, TXT, LOG · max 10 MB</p>
+                  <p className="text-sm text-slate-500">or click to browse — CSV, JSON, TXT, LOG · max 15 MB</p>
                 </>
               )}
             </div>
@@ -248,115 +260,7 @@ export default function Home() {
 
         {/* Results */}
         {result && (
-          <div className="space-y-6">
-            {/* Header with reset */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900">Analysis Results</h2>
-                <p className="text-sm text-slate-500 mt-1">Incident ID: {result.incident_id}</p>
-              </div>
-              <button
-                onClick={reset}
-                className="text-sm text-slate-600 hover:text-slate-900 flex items-center gap-1"
-              >
-                <X className="w-4 h-4" /> Analyze another
-              </button>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4">
-              <StatCard icon={FileText} label="Events Parsed" value={result.events_parsed} color="blue" />
-              <StatCard icon={Target} label="Techniques Found" value={result.mitre_techniques.length} color="purple" />
-              <StatCard icon={Clock} label="Tactics Covered" value={new Set(result.mitre_techniques.map(t => t.tactic)).size} color="green" />
-            </div>
-
-            {/* Downloads */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6">
-              <h3 className="font-semibold text-slate-900 mb-4">Export Report</h3>
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { format: 'pdf', label: 'PDF Report', desc: 'Compliance-ready' },
-                  { format: 'json', label: 'JSON Data', desc: 'For automation' },
-                  { format: 'csv', label: 'CSV Export', desc: 'Open in Excel' },
-                ].map((d) => (
-                  <button
-                    key={d.format}
-                    onClick={() => downloadReport(d.format)}
-                    className="border border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-lg p-4 text-left transition-all group"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-sm text-slate-900">{d.label}</span>
-                      <Download className="w-4 h-4 text-slate-400 group-hover:text-blue-600" />
-                    </div>
-                    <span className="text-xs text-slate-500">{d.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* MITRE Techniques */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6">
-              <h3 className="font-semibold text-slate-900 mb-4">MITRE ATT&CK Techniques Detected</h3>
-              <div className="space-y-2">
-                {result.mitre_techniques.map((t) => (
-                  <div key={t.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <span className={`px-2 py-0.5 rounded text-xs font-mono font-medium border ${TACTIC_COLORS[t.tactic] || TACTIC_COLORS.Unknown}`}>
-                        {t.id}
-                      </span>
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">{t.name}</p>
-                        <p className="text-xs text-slate-500">{t.tactic}</p>
-                      </div>
-                    </div>
-                    <span className="text-sm font-medium text-slate-700">{t.count} events</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Events Timeline */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6">
-              <h3 className="font-semibold text-slate-900 mb-4">Event Timeline</h3>
-              <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                {result.events.map((event, idx) => (
-                  <div key={event.id} className="flex gap-4">
-                    <div className="flex flex-col items-center">
-                      <div className="w-2 h-2 rounded-full bg-blue-600"></div>
-                      {idx < result.events.length - 1 && (
-                        <div className="w-0.5 flex-1 bg-slate-200 my-1"></div>
-                      )}
-                    </div>
-                    <div className="flex-1 pb-4">
-                      <div className="flex items-start justify-between gap-3 flex-wrap">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-slate-900 mb-1">{event.description}</p>
-                          <div className="flex items-center gap-2 flex-wrap text-xs text-slate-500">
-                            <span>{event.timestamp}</span>
-                            <span>•</span>
-                            <span className="font-mono">{event.source}</span>
-                            {event.mitre_technique_id && (
-                              <>
-                                <span>•</span>
-                                <span className={`px-1.5 py-0.5 rounded font-mono font-medium border ${TACTIC_COLORS[event.mitre_tactic] || TACTIC_COLORS.Unknown}`}>
-                                  {event.mitre_technique_id}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        {event.confidence > 0 && (
-                          <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                            {event.confidence}%
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <ResultsView result={result} onReset={reset} onDownload={downloadReport} />
         )}
       </main>
 
@@ -373,6 +277,158 @@ export default function Home() {
           </a>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function AttackHeatmap({ techniques }: { techniques: MitreTechnique[] }) {
+  const byTactic: Record<string, MitreTechnique[]> = {};
+  ALL_TACTICS.forEach(t => { byTactic[t] = []; });
+  techniques.forEach(t => { if (byTactic[t.tactic]) byTactic[t.tactic].push(t); });
+  const covered = ALL_TACTICS.filter(t => byTactic[t].length > 0).length;
+
+  return (
+    <div>
+      <p className="text-sm text-slate-500 mb-3">{covered} of {ALL_TACTICS.length} tactics covered in this incident</p>
+      <div className="overflow-x-auto pb-2">
+        <div className="flex gap-2 min-w-max">
+          {ALL_TACTICS.map(tactic => {
+            const hits = byTactic[tactic];
+            const active = hits.length > 0;
+            return (
+              <div key={tactic} className={`w-36 rounded-lg border p-2.5 ${active ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`}>
+                <p className={`text-xs font-semibold mb-2 leading-tight ${active ? 'text-red-700' : 'text-slate-400'}`}>
+                  {tactic}
+                </p>
+                {hits.length === 0 && <p className="text-xs text-slate-300 italic">—</p>}
+                {hits.map(t => (
+                  <div key={t.id} className="bg-red-600 rounded px-1.5 py-1 mb-1">
+                    <p className="text-xs font-mono font-bold text-white">{t.id}</p>
+                    <p className="text-xs text-red-100 truncate">{t.name}</p>
+                    <p className="text-xs text-red-200">{t.count} event{t.count !== 1 ? 's' : ''}</p>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ResultsView({ result, onReset, onDownload }: { result: AnalysisResult; onReset: () => void; onDownload: (f: string) => void }) {
+  const [tab, setTab] = useState<'heatmap' | 'techniques' | 'timeline'>('heatmap');
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Analysis Results</h2>
+          <p className="text-sm text-slate-500 mt-1 font-mono">{result.incident_id}</p>
+        </div>
+        <button onClick={onReset} className="text-sm text-slate-600 hover:text-slate-900 flex items-center gap-1">
+          <X className="w-4 h-4" /> Analyze another
+        </button>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <StatCard icon={FileText} label="Events Parsed"    value={result.events_parsed}                                   color="blue" />
+        <StatCard icon={Target}   label="Techniques Found" value={result.mitre_techniques.length}                         color="purple" />
+        <StatCard icon={Clock}    label="Tactics Covered"  value={new Set(result.mitre_techniques.map(t => t.tactic)).size} color="green" />
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-xl p-6">
+        <h3 className="font-semibold text-slate-900 mb-4">Export Report</h3>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { format: 'pdf', label: 'PDF Report', desc: 'Compliance-ready' },
+            { format: 'json', label: 'JSON Data',  desc: 'For automation' },
+            { format: 'csv', label: 'CSV Export',  desc: 'Open in Excel' },
+          ].map(d => (
+            <button key={d.format} onClick={() => onDownload(d.format)}
+              className="border border-slate-200 hover:border-blue-400 hover:bg-blue-50 rounded-lg p-4 text-left transition-all group">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-medium text-sm text-slate-900">{d.label}</span>
+                <Download className="w-4 h-4 text-slate-400 group-hover:text-blue-600" />
+              </div>
+              <span className="text-xs text-slate-500">{d.desc}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+        <div className="flex border-b border-slate-200">
+          {([
+            { id: 'heatmap',    label: 'ATT&CK Heatmap' },
+            { id: 'techniques', label: 'Techniques' },
+            { id: 'timeline',   label: 'Event Timeline' },
+          ] as const).map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                tab === t.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-900'
+              }`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-6">
+          {tab === 'heatmap' && <AttackHeatmap techniques={result.mitre_techniques} />}
+
+          {tab === 'techniques' && (
+            <div className="space-y-2">
+              {result.mitre_techniques.map(t => (
+                <div key={t.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <span className={`px-2 py-0.5 rounded text-xs font-mono font-medium border ${TACTIC_COLORS[t.tactic] || TACTIC_COLORS.Unknown}`}>
+                      {t.id}
+                    </span>
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">{t.name}</p>
+                      <p className="text-xs text-slate-500">{t.tactic}</p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-medium text-slate-700">{t.count} events</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {tab === 'timeline' && (
+            <div className="space-y-3 max-h-[600px] overflow-y-auto">
+              {result.events.map((event, idx) => (
+                <div key={event.id} className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="w-2 h-2 rounded-full bg-blue-600 mt-1" />
+                    {idx < result.events.length - 1 && <div className="w-0.5 flex-1 bg-slate-200 my-1" />}
+                  </div>
+                  <div className="flex-1 pb-4">
+                    <p className="text-sm text-slate-900 mb-1">{event.description}</p>
+                    <div className="flex items-center gap-2 flex-wrap text-xs text-slate-500">
+                      <span>{event.timestamp}</span>
+                      <span>·</span>
+                      <span className="font-mono">{event.source}</span>
+                      {event.mitre_technique_id && (
+                        <>
+                          <span>·</span>
+                          <span className={`px-1.5 py-0.5 rounded font-mono font-medium border ${TACTIC_COLORS[event.mitre_tactic] || TACTIC_COLORS.Unknown}`}>
+                            {event.mitre_technique_id}
+                          </span>
+                        </>
+                      )}
+                      {event.confidence > 0 && (
+                        <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-600">{event.confidence}%</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
