@@ -1,205 +1,111 @@
-# 🎯 MITRE ATT&CK Incident Mapper
+# MITRE Incident Mapper
 
-**Full-stack security tool that converts raw incident logs into MITRE ATT&CK-mapped timelines with PDF reports.**
+Upload a security log, get a MITRE ATT&CK-mapped incident timeline back in seconds. Built for SOC analysts and incident responders who need to move fast.
 
-[![Backend](https://img.shields.io/badge/Backend-Railway-9333ea)](https://railway.app)
-[![Frontend](https://img.shields.io/badge/Frontend-Vercel-000)](https://vercel.com)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+**Live:** https://mitre-incident-mapper.vercel.app  
+**API Docs:** https://mitre-incident-mapper.vercel.app/docs  
+**API:** https://mitreincident-product.up.railway.app
 
-## 🏗️ Architecture
+---
 
-```
-┌─────────────────────┐         ┌─────────────────────┐
-│   Frontend (Vercel) │  HTTPS  │  Backend (Railway)  │
-│   Next.js 14        │ ◄─────► │  Python Flask API   │
-│   Tailwind CSS      │   API   │  MITRE ATT&CK Logic │
-└─────────────────────┘         └─────────────────────┘
-       ▲                                  ▲
-       │                                  │
-   User Browser                    PDF/JSON Export
-```
+## What it does
 
-**Why split?**
-- ✅ **Vercel** is best-in-class for Next.js (free, instant deploys)
-- ✅ **Railway** is best for Python APIs (always-on, $5/month free credit)
-- ✅ Each scales independently
-- ✅ Industry-standard pattern
+Drop in a `.csv`, `.json`, `.txt`, or `.log` file and the tool:
 
-## 📁 Repo Structure
+- Maps each event to a MITRE ATT&CK technique using 120+ keyword patterns
+- Builds an ordered incident timeline grouped by tactic
+- Shows confidence scores per event
+- Lets you export the full report as PDF, JSON, or CSV
+
+No account needed, no setup.
+
+---
+
+## Stack
+
+**Frontend** — deployed on Vercel  
+Next.js 14 (App Router), TypeScript, Tailwind CSS, Lucide React
+
+**Backend** — deployed on Railway  
+Python 3.11, Flask, Flask-CORS, Gunicorn, ReportLab (PDF)
+
+---
+
+## Project structure
 
 ```
 MITRE_Incident_Mapper/
-├── backend/              # Flask API → Railway
-│   ├── app.py
+├── backend/
+│   ├── app.py                  # Flask API, all routes
 │   ├── src/
-│   ├── data/sample_logs/
+│   │   ├── mitre_mapper.py     # Pattern matching logic
+│   │   └── timeline_builder.py # Timeline + PDF generation
+│   ├── data/sample_logs/       # Sample CSV for testing
 │   ├── requirements.txt
 │   ├── Procfile
 │   └── railway.json
 │
-├── frontend/             # Next.js → Vercel
-│   ├── src/app/
-│   ├── package.json
-│   ├── tailwind.config.js
-│   └── vercel.json
-│
-└── README.md             # This file
+└── frontend/
+    ├── src/app/
+    │   ├── page.tsx            # Main upload + results UI
+    │   └── docs/page.tsx       # API documentation
+    ├── package.json
+    └── vercel.json
 ```
 
-## 🚀 Deployment Guide
+---
 
-### Part 1: Deploy Backend to Railway (5 min)
+## Running locally
 
-1. **Push to GitHub:**
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git remote add origin https://github.com/soham7998/MITRE_Incident_Mapper.git
-   git branch -M main
-   git push -u origin main
-   ```
-
-2. **Deploy on Railway:**
-   - Go to https://railway.app → Login with GitHub
-   - Click **New Project** → **Deploy from GitHub repo**
-   - Select your repo
-   - Click **Add variables** → leave empty (no env vars needed)
-   - **Important:** Settings → **Root Directory:** `/backend`
-   - Railway auto-detects Python + deploys
-
-3. **Generate domain:**
-   - Settings tab → **Networking** → **Generate Domain**
-   - Save the URL: `https://your-app.up.railway.app`
-
-4. **Test the API:**
-   ```bash
-   curl https://your-app.up.railway.app/api/health
-   # Should return: {"status": "healthy", ...}
-   ```
-
-### Part 2: Deploy Frontend to Vercel (5 min)
-
-1. **Go to Vercel:** https://vercel.com/new
-2. **Import your GitHub repo**
-3. **Configure:**
-   - Framework Preset: **Next.js** (auto-detected)
-   - **Root Directory:** `frontend`
-   - Build Command: `npm run build` (auto)
-   - Output Directory: `.next` (auto)
-4. **Add environment variable:**
-   ```
-   Name:  NEXT_PUBLIC_API_URL
-   Value: https://your-app.up.railway.app
-   ```
-   *(Use the Railway URL from Part 1)*
-5. **Click Deploy** → Done in ~60 seconds
-
-6. **Your live URLs:**
-   - Frontend: `https://mitre-incident-mapper.vercel.app`
-   - Backend: `https://your-app.up.railway.app`
-
-### Part 3: Update Backend CORS (Important!)
-
-After Vercel deploys, update CORS to allow your Vercel domain:
-
-Edit `backend/app.py`:
-```python
-CORS(app, resources={
-    r"/api/*": {
-        "origins": [
-            "http://localhost:3000",
-            "https://mitre-incident-mapper.vercel.app",  # ← Add your Vercel URL
-            "https://*.vercel.app",
-        ],
-    }
-})
-```
-
-Then push:
-```bash
-git add backend/app.py
-git commit -m "Update CORS for Vercel"
-git push
-```
-
-Railway auto-redeploys. ✅
-
-## 💻 Local Development
-
-### Backend
+**Backend**
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate
+python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 python app.py
-# → http://localhost:5000
+# http://localhost:5000
 ```
 
-### Frontend
+**Frontend**
 ```bash
 cd frontend
 npm install
 cp .env.example .env.local
+# set NEXT_PUBLIC_API_URL=http://localhost:5000
 npm run dev
-# → http://localhost:3000
+# http://localhost:3000
 ```
 
-## 🧪 Testing
+Test it with `backend/data/sample_logs/incident_1.csv`.
 
-Upload sample file: `backend/data/sample_logs/incident_1.csv`
+---
 
-Expected output:
-- ✅ 15 events parsed
-- ✅ 8+ MITRE techniques mapped
-- ✅ Tactics: Initial Access → Execution → Credential Access → etc.
-- ✅ Downloadable PDF report
+## API
 
-## 📊 Tech Stack
+Full reference at https://mitre-incident-mapper.vercel.app/docs
 
-### Backend
-- **Python 3.11** + Flask 2.3
-- **Flask-CORS** for cross-origin requests
-- **Gunicorn** WSGI server
-- **ReportLab** for PDF generation
-- **Hosting:** Railway.app
+```
+POST /api/analyze          upload log file → incident analysis
+GET  /api/incident/:id     fetch a previous result
+GET  /api/download/:id/:format   export as pdf | json | csv
+GET  /api/health           liveness check
+```
 
-### Frontend
-- **Next.js 14** (App Router)
-- **TypeScript** for type safety
-- **Tailwind CSS** for styling
-- **Lucide React** for icons
-- **Hosting:** Vercel
+---
 
-## 💰 Cost
+## Deploying your own
 
-- **Vercel:** Free (Hobby plan — perfect for portfolios)
-- **Railway:** $5/month free credit (covers small apps)
-- **Total:** $0/month within free tier
+**Backend → Railway**
+1. New project → deploy from GitHub, root directory set to `backend/`
+2. Generate a domain under Settings → Networking
+3. No env vars required
 
-## 🎓 What This Project Demonstrates
+**Frontend → Vercel**
+1. Import repo, set root directory to `frontend/`
+2. Add env var: `NEXT_PUBLIC_API_URL=https://your-railway-url.up.railway.app`
+3. Deploy
 
-✅ **Full-stack architecture** (split frontend/backend)
-✅ **Modern deployment** (Vercel + Railway)
-✅ **CORS configuration** for production
-✅ **REST API design** (clean endpoints)
-✅ **React/TypeScript** with hooks
-✅ **Tailwind CSS** for modern UI
-✅ **Security domain knowledge** (MITRE ATT&CK)
-✅ **DevOps skills** (Git, CI/CD, env vars)
+---
 
-## 📝 Resume Bullet
-
-> Built and deployed full-stack MITRE ATT&CK incident analysis platform with Next.js frontend on Vercel and Python Flask API on Railway. Implemented 120+ pattern-based MITRE technique mappings, automated PDF report generation, and CORS-configured REST API. Architecture demonstrates production-grade frontend/backend separation.
-
-## 🔗 Links
-
-- **Live App:** https://mitre-incident-mapper.vercel.app
-- **API Docs:** https://your-app.up.railway.app
-- **GitHub:** https://github.com/soham7998/MITRE_Incident_Mapper
-- **LinkedIn:** https://linkedin.com/in/shahsoham2003
-
-
-
-**Built by [Soham Shah](https://linkedin.com/in/shahsoham2003)** | Cybersecurity Engineer |  SOC Analyst
+Built by **Soham Shah** at **Happy Incident**  
+[LinkedIn](https://linkedin.com/in/shahsoham2003) · [GitHub](https://github.com/soham7998/MITRE_Incident_Mapper)

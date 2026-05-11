@@ -1,58 +1,57 @@
-# MITRE Incident Mapper - Backend API
+# MITRE Incident Mapper — Backend
 
-Flask REST API for MITRE ATT&CK incident analysis. Deployed on Railway.app.
+Flask REST API that handles log parsing, MITRE ATT&CK pattern matching, timeline building, and report export.
 
-## 🚀 Live API
+**Production:** https://mitreincident-product.up.railway.app
 
-- **Production:** `https://mitre-mapper-api.up.railway.app`
-- **Health Check:** `https://mitre-mapper-api.up.railway.app/api/health`
+---
 
-## 📡 API Endpoints
+## Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | API info |
-| GET | `/api/health` | Health check |
-| POST | `/api/analyze` | Upload & analyze log file |
-| GET | `/api/incident/<id>` | Get incident details |
-| GET | `/api/download/<id>/<format>` | Download report (pdf/json/csv) |
-
-## 🛠️ Local Development
-
-```bash
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python app.py
-# → http://localhost:5000
+```
+GET  /                          API info
+GET  /api/health                liveness check
+POST /api/analyze               upload log → analysis result
+GET  /api/incident/:id          fetch stored incident
+GET  /api/download/:id/:format  export as pdf | json | csv
 ```
 
-## 🚂 Deploy to Railway
+Full docs: https://mitre-incident-mapper.vercel.app/docs
 
-1. Push to GitHub
-2. Go to https://railway.app
-3. New Project → Deploy from GitHub
-4. Select repo → Set root directory to `/backend`
-5. Generate domain in Settings → Networking
+---
 
-## 🧪 Test API
+## Local setup
 
 ```bash
-# Health check
-curl https://your-api.up.railway.app/api/health
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+python app.py
+# http://localhost:5000
+```
 
-# Upload log
-curl -X POST https://your-api.up.railway.app/api/analyze \
+Test with the included sample:
+```bash
+curl -X POST http://localhost:5000/api/analyze \
   -F "file=@data/sample_logs/incident_1.csv"
 ```
 
-## 📦 Tech Stack
+---
+
+## Stack
 
 - Python 3.11
-- Flask 2.3 + Flask-CORS
-- Gunicorn (production WSGI)
-- ReportLab (PDF generation)
+- Flask + Flask-CORS
+- Gunicorn (production)
+- ReportLab (PDF export)
 
-## 🔗 Frontend
+---
 
-Frontend deployed separately on Vercel: https://mitre-incident-mapper.vercel.app
+## How the mapping works
+
+`src/mitre_mapper.py` holds 120+ keyword patterns tied to ATT&CK technique IDs. Each log line is scored against every pattern; the highest-confidence match above the threshold wins. Events with no match are labeled Unknown with confidence 0.
+
+`src/timeline_builder.py` sorts matched events chronologically and groups them by tactic to build the kill-chain view.
+
+---
+
+Built by **Soham Shah** at **Happy Incident**

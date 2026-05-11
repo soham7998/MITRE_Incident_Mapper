@@ -1,64 +1,48 @@
-# MITRE Incident Mapper - Frontend
+# MITRE Incident Mapper — Frontend
 
-Modern Next.js 14 frontend with Tailwind CSS. Deployed on Vercel.
+Next.js 14 frontend for uploading incident logs and viewing MITRE ATT&CK-mapped timelines.
 
-## 🚀 Live Demo
+**Live:** https://mitre-incident-mapper.vercel.app  
+**API Docs:** https://mitre-incident-mapper.vercel.app/docs
 
-**Frontend:** https://mitre-incident-mapper.vercel.app
-**Backend API:** https://mitre-mapper-api.up.railway.app
+---
 
-## 🛠️ Local Development
+## Local setup
 
 ```bash
 npm install
 cp .env.example .env.local
-# Edit .env.local: NEXT_PUBLIC_API_URL=http://localhost:5000
-
+# set NEXT_PUBLIC_API_URL=http://localhost:5000
 npm run dev
-# → http://localhost:3000
+# http://localhost:3000
 ```
 
-Make sure the backend is running on port 5000 first.
+Backend needs to be running on port 5000 first.
 
-## ▲ Deploy to Vercel
+---
 
-### Option 1: One-click deploy (easiest)
-1. Push frontend code to GitHub
-2. Go to https://vercel.com/new
-3. Import your repo
-4. **Root Directory:** `frontend` (if monorepo)
-5. Add environment variable:
-   ```
-   NEXT_PUBLIC_API_URL=https://your-railway-api.up.railway.app
-   ```
-6. Deploy
+## Stack
 
-### Option 2: CLI
-```bash
-npm install -g vercel
-vercel login
-vercel
-# Follow prompts → app deploys instantly
-```
+- Next.js 14 (App Router)
+- TypeScript
+- Tailwind CSS
+- Lucide React
 
-## 📦 Tech Stack
+---
 
-- **Framework:** Next.js 14 (App Router)
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **Icons:** Lucide React
-- **Hosting:** Vercel (free tier)
+## Pages
 
-## 🎨 Features
+- `/` — drag-and-drop upload, results view, export buttons
+- `/docs` — API reference
 
-- Drag-and-drop file upload
-- Real-time analysis with backend
-- MITRE ATT&CK technique cards
-- Event timeline visualization
-- PDF/JSON/CSV export
-- Responsive design
-- Dark mode ready
+---
 
-## 🔗 Backend
+## Deploy to Vercel
 
-API repo: `/backend` folder — deployed on Railway.app
+1. Import the repo, set root directory to `frontend/`
+2. Add env var: `NEXT_PUBLIC_API_URL=https://mitreincident-product.up.railway.app`
+3. Deploy
+
+---
+
+Built by **Soham Shah** at **Happy Incident**
