@@ -10,14 +10,13 @@ import json
 import csv
 import re
 import requests as req
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+req.packages.urllib3.disable_warnings(InsecureRequestWarning)
 from datetime import datetime
 from io import BytesIO, StringIO
 import uuid
-import urllib3
 
 incidents = {}
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 15 * 1024 * 1024  # 15 MB
