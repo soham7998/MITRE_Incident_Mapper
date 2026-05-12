@@ -325,21 +325,28 @@ function AttackHeatmap({ techniques }: { techniques: MitreTechnique[] }) {
     <div>
       <p className="text-sm text-slate-500 mb-3">{covered} of {ALL_TACTICS.length} tactics covered in this incident</p>
       <div className="overflow-x-auto pb-2">
-        <div className="flex gap-2 min-w-max">
+        <div className="flex gap-3 min-w-max">
           {ALL_TACTICS.map(tactic => {
             const hits = byTactic[tactic];
             const active = hits.length > 0;
             return (
-              <div key={tactic} className={`w-36 rounded-lg border p-2.5 ${active ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`}>
-                <p className={`text-xs font-semibold mb-2 leading-tight ${active ? 'text-red-700' : 'text-slate-400'}`}>
-                  {tactic}
-                </p>
-                {hits.length === 0 && <p className="text-xs text-slate-300 italic">—</p>}
+              <div key={tactic} className={`w-44 rounded-xl border-2 p-3 transition-all duration-200 ${active ? 'bg-gradient-to-b from-red-50 to-red-100 border-red-300 shadow-md shadow-red-100' : 'bg-slate-50 border-slate-200 opacity-60'}`}>
+                <div className="flex items-center justify-between mb-2.5">
+                  <p className={`text-sm font-bold uppercase tracking-wide leading-tight ${active ? 'text-red-700' : 'text-slate-400'}`}>
+                    {tactic}
+                  </p>
+                  {active && (
+                    <span className="bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0 ml-1">
+                      {hits.length}
+                    </span>
+                  )}
+                </div>
+                {hits.length === 0 && <p className="text-xs text-slate-300 italic">No activity</p>}
                 {hits.map(t => (
-                  <div key={t.id} className="bg-red-600 rounded px-1.5 py-1 mb-1">
+                  <div key={t.id} className="bg-red-600 rounded-lg px-2 py-1.5 mb-1.5 shadow-sm">
                     <p className="text-xs font-mono font-bold text-white">{t.id}</p>
                     <p className="text-xs text-red-100 truncate">{t.name}</p>
-                    <p className="text-xs text-red-200">{t.count} event{t.count !== 1 ? 's' : ''}</p>
+                    <p className="text-xs text-red-300 mt-0.5">{t.count} event{t.count !== 1 ? 's' : ''}</p>
                   </div>
                 ))}
               </div>
