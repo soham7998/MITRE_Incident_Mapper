@@ -274,6 +274,18 @@ function RawForm({ onResult }: { onResult: (r: AnalysisResult) => void }) {
   );
 }
 
+function extractScopeFromUrl(raw: string): string {
+  try {
+    if (!raw.includes('#')) return '';
+    const hash = raw.split('#', 2)[1].replace(/^\//, '');
+    const parts = hash.split('/');
+    // parts[0] is tenant UUID, parts[1] is scope
+    const candidate = parts[1] || '';
+    if (!candidate || /^[0-9a-f-]{36}$/i.test(candidate)) return '';
+    return candidate;
+  } catch { return ''; }
+}
+
 function DNIFForm({ onResult }: { onResult: (r: AnalysisResult) => void }) {
   const [url, setUrl]         = useState('');
   const [token, setToken]     = useState('');
@@ -283,6 +295,12 @@ function DNIFForm({ onResult }: { onResult: (r: AnalysisResult) => void }) {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
 
+  const handleUrlChange = (val: string) => {
+    setUrl(val);
+    const detected = extractScopeFromUrl(val);
+    if (detected) setScopeId(detected);
+  };
+
   const run = async () => {
     setLoading(true); setError('');
     try {
@@ -291,7 +309,7 @@ function DNIFForm({ onResult }: { onResult: (r: AnalysisResult) => void }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           url, token, query, limit: parseInt(limit),
-          ...(scopeId.trim() ? { scope_id: scopeId.trim() } : {}),
+          scope_id: scopeId.trim() || 'default',
         }),
       });
       const data = await res.json();
@@ -328,7 +346,7 @@ function DNIFForm({ onResult }: { onResult: (r: AnalysisResult) => void }) {
             <span className="font-semibold">② API Token</span> — the hex string <em>shown on</em> that page.
             Do <strong>not</strong> put it inside the URL.
           </p>
-          <p className="font-mono text-blue-700">04a74349ccc34b4b9e8be0c1eeec6e9a</p>
+          <p className="font-mono text-blue-700">e.g. a1b2c3d4e5f6…</p>
         </div>
       </div>
 
@@ -336,7 +354,7 @@ function DNIFForm({ onResult }: { onResult: (r: AnalysisResult) => void }) {
         label="① Console URL"
         hint="Browser address bar URL — must end with /system/token"
       >
-        <input value={url} onChange={e => setUrl(e.target.value)}
+        <input value={url} onChange={e => handleUrlChange(e.target.value)}
           placeholder="https://ap1.dnif.cloud/#/<tenant-uuid>/training/system/token"
           className="input" />
       </Field>
@@ -345,13 +363,13 @@ function DNIFForm({ onResult }: { onResult: (r: AnalysisResult) => void }) {
         hint="The hex token value shown on the Manage Tokens page — separate from the URL above"
       >
         <input value={token} onChange={e => setToken(e.target.value)} type="password"
-          placeholder="e.g. 04a74349ccc34b4b9e8be0c1eeec6e9a"
+          placeholder="paste token here"
           className="input" />
       </Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Scope ID" hint="e.g. training, default (auto-detected from URL)">
+        <Field label="Scope ID" hint="auto-filled from URL — edit if needed">
           <input value={scopeId} onChange={e => setScopeId(e.target.value)}
-            placeholder="auto-detected"
+            placeholder="e.g. training"
             className="input" />
         </Field>
         <Field label="Max events">
