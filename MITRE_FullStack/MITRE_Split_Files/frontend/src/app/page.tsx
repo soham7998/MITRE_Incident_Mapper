@@ -4,7 +4,8 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import {
   Shield, Upload, FileText, Download, Loader2, CheckCircle, AlertCircle,
-  Target, Clock, Activity, ChevronRight, X, ExternalLink
+  Target, Clock, Activity, ChevronRight, X, ExternalLink, BookOpen,
+  ScanSearch, GitBranch, Gauge,
 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -288,6 +289,61 @@ export default function Home() {
                   <p className="text-xs text-slate-500 mt-1">{f.desc}</p>
                 </div>
               ))}
+            </div>
+
+            {/* How mapping works */}
+            <div className="mt-6 border border-slate-200 rounded-xl bg-white overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm font-semibold text-slate-900">How MITRE Mapping Works</span>
+                </div>
+                <a
+                  href="https://github.com/soham7998/MITRE_Incident_Mapper/blob/main/MITRE_FullStack/MITRE_Split_Files/backend/src/mitre_mapper.py"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 font-medium"
+                >
+                  View source on GitHub <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+              <div className="grid grid-cols-4 divide-x divide-slate-100">
+                {[
+                  {
+                    icon: Upload,
+                    step: '01',
+                    title: 'Parse',
+                    body: 'Raw logs (syslog, CEF, CSV, JSON) are ingested line-by-line and normalised into structured events with a timestamp, source, and description.',
+                  },
+                  {
+                    icon: ScanSearch,
+                    step: '02',
+                    title: 'Match',
+                    body: '120+ compiled regex patterns are tested against each event description. Patterns cover keywords like powershell, mimikatz, psexec, and more.',
+                  },
+                  {
+                    icon: GitBranch,
+                    step: '03',
+                    title: 'Assign',
+                    body: 'A matched pattern carries the ATT&CK technique ID (e.g. T1059), subtechnique, and tactic (e.g. Execution) — all assigned directly to that event.',
+                  },
+                  {
+                    icon: Gauge,
+                    step: '04',
+                    title: 'Score',
+                    body: 'Confidence is weighted by tactic severity — Initial Access and Credential Access score highest (1.0 / 0.95), Discovery lowest (0.85).',
+                  },
+                ].map(({ icon: Icon, step, title, body }) => (
+                  <div key={step} className="px-4 py-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-mono font-bold text-slate-300">{step}</span>
+                      <Icon className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-semibold text-slate-800">{title}</span>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed">{body}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
