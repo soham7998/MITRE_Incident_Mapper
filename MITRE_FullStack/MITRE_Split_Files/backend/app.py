@@ -273,7 +273,6 @@ def download(incident_id, format):
             as_attachment=True,
             download_name=f'{incident_id}.json'
         )
-
     elif format == 'csv':
         output = StringIO()
         writer = csv.DictWriter(output, fieldnames=[
@@ -297,7 +296,6 @@ def download(incident_id, format):
             as_attachment=True,
             download_name=f'{incident_id}.csv'
         )
-
     elif format == 'pdf':
         pdf_bytes = report_generator.generate_pdf(incident)
         return send_file(
@@ -306,8 +304,28 @@ def download(incident_id, format):
             as_attachment=True,
             download_name=f'{incident_id}.pdf'
         )
-
     return jsonify({'error': 'Unsupported format'}), 400
+
+
+@app.route('/api/download/pdf', methods=['POST', 'OPTIONS'])
+def download_pdf_post():
+    """Generate PDF from full incident data POSTed by the client — no server-side memory needed."""
+    if request.method == 'OPTIONS':
+        return '', 204
+    incident = request.get_json()
+    if not incident:
+        return jsonify({'error': 'No incident data provided'}), 400
+    incident_id = incident.get('incident_id', 'report')
+    try:
+        pdf_bytes = report_generator.generate_pdf(incident)
+        return send_file(
+            BytesIO(pdf_bytes),
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'{incident_id}.pdf'
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # ============================================================================
 # INTEGRATIONS

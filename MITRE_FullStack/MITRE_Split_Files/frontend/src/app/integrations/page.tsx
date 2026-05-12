@@ -466,8 +466,39 @@ function AttackHeatmap({ techniques }: { techniques: MitreTechnique[] }) {
 
 // ── results ───────────────────────────────────────────────────────────────────
 
+function downloadJson(result: AnalysisResult) {
+  const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `${result.incident_id}.json`; a.click();
+}
+
+function downloadCsv(result: AnalysisResult) {
+  const header = 'Timestamp,Source,Description,MITRE Tactic,MITRE Technique ID,MITRE Technique,Confidence\n';
+  const rows = result.events.map(e =>
+    [e.timestamp, e.source, `"${(e.description || '').replace(/"/g, '""')}"`,
+     e.mitre_tactic, e.mitre_technique_id || '', e.mitre_technique_name || '',
+     `${e.confidence}%`].join(',')
+  ).join('\n');
+  const blob = new Blob([header + rows], { type: 'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `${result.incident_id}.csv`; a.click();
+}
+
+async function downloadPdf(result: AnalysisResult) {
+  const res = await fetch(`${API_URL}/api/download/pdf`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(result),
+  });
+  if (!res.ok) { alert('PDF generation failed'); return; }
+  const blob = await res.blob();
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `${result.incident_id}.pdf`; a.click();
+}
+
 function Results({ result, onReset }: { result: AnalysisResult; onReset: () => void }) {
   const [tab, setTab] = useState<'heatmap' | 'timeline' | 'techniques'>('heatmap');
+  const [pdfLoading, setPdfLoading] = useState(false);
   const tactics = new Set(result.mitre_techniques.map(t => t.tactic)).size;
 
   return (
@@ -501,13 +532,19 @@ function Results({ result, onReset }: { result: AnalysisResult; onReset: () => v
 
       {/* Exports */}
       <div className="flex gap-2">
-        {(['pdf', 'json', 'csv'] as const).map(fmt => (
-          <a key={fmt} href={`${API_URL}/api/download/${result.incident_id}/${fmt}`} target="_blank" rel="noreferrer"
-            className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 hover:border-blue-400 rounded-lg text-sm font-medium text-slate-700 hover:text-blue-600 transition-colors">
-            <Download className="w-3.5 h-3.5" />
-            {fmt.toUpperCase()}
-          </a>
-        ))}
+        <button onClick={() => downloadJson(result)}
+          className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 hover:border-blue-400 rounded-lg text-sm font-medium text-slate-700 hover:text-blue-600 transition-colors">
+          <Download className="w-3.5 h-3.5" /> JSON
+        </button>
+        <button onClick={() => downloadCsv(result)}
+          className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 hover:border-blue-400 rounded-lg text-sm font-medium text-slate-700 hover:text-blue-600 transition-colors">
+          <Download className="w-3.5 h-3.5" /> CSV
+        </button>
+        <button onClick={async () => { setPdfLoading(true); await downloadPdf(result); setPdfLoading(false); }}
+          disabled={pdfLoading}
+          className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 hover:border-blue-400 rounded-lg text-sm font-medium text-slate-700 hover:text-blue-600 transition-colors disabled:opacity-50">
+          {pdfLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} PDF
+        </button>
       </div>
 
       {/* Tabs */}
