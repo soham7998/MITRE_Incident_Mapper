@@ -11,8 +11,10 @@ import csv
 import re
 import requests as req
 from datetime import datetime
+import time
 from io import BytesIO, StringIO
 import uuid
+from urllib.parse import urlparse
 
 from src.mitre_mapper import MitreMapper
 from src.timeline_builder import TimelineBuilder, ReportGenerator
@@ -515,79 +517,180 @@ def integrate_raw():
 
 @app.route('/api/integrations/dnif', methods=['POST', 'OPTIONS'])
 def integrate_dnif():
-    """Query DNIF Hypercloud via its REST API and run MITRE analysis."""
+    """Query DNIF Hypercloud via API token from the system/token page."""
     if request.method == 'OPTIONS':
         return '', 204
 
     body = request.get_json() or {}
-    base_url = (body.get('url') or '').rstrip('/')
-    username = body.get('username') or ''
-    password = body.get('password') or ''
-    query = body.get('query') or 'stream=AUTHENTICATION fetch last 1h'
-    limit = min(int(body.get('limit') or 500), 2000)
+    raw_url   = (body.get('url') or '').strip()
+    token     = (body.get('token') or '').strip()
+    query     = body.get('query') or 'stream=* | duration 1d'
+    limit     = min(int(body.get('limit') or 500), 2000)
+    scope_id  = (body.get('scope_id') or 'default').strip()
+    tz        = body.get('timezone') or 'UTC'
 
-    if not base_url or not username or not password:
-        return jsonify({'error': 'url, username, and password are required'}), 400
+    if not raw_url or not token:
+        return jsonify({'error': 'url and token are required'}), 400
+
+    # Accept full browser URL like https://ap1.dnif.cloud/#/<tenant-uuid>/...
+    no_hash  = raw_url.split('#')[0].rstrip('/')
+    parsed   = urlparse(no_hash)
+    base_url = f"{parsed.scheme}://{parsed.netloc}"
+
+    tenant_id = ''
+    if '#' in raw_url:
+        hash_part  = raw_url.split('#', 1)[1].lstrip('/')
+        uuid_match = re.match(
+            r'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})',
+            hash_part, re.IGNORECASE,
+        )
+        if uuid_match:
+            tenant_id = uuid_match.group(1)
+
+    # Also try to extract scope from URL path if not provided in body
+    if scope_id == 'default' and '#' in raw_url:
+        hash_part = raw_url.split('#', 1)[1].lstrip('/')
+        parts = hash_part.split('/')
+        if len(parts) >= 2:
+            candidate = parts[1]
+            if candidate and not re.match(r'^[0-9a-f-]{36}$', candidate, re.IGNORECASE):
+                scope_id = candidate
+
+    if not tenant_id:
+        return jsonify({
+            'error': (
+                'Could not find tenant ID in URL. '
+                'Paste the full browser URL including the # fragment, '
+                'e.g. https://ap1.dnif.cloud/#/<tenant-uuid>/training/system/token'
+            )
+        }), 400
+
+    # DNIF Hypercloud uses "Token" header (not SSID) for API token auth
+    hdrs = {'Token': token, 'Content-Type': 'application/json', 'Accept': 'application/json'}
 
     try:
-        # Step 1 – authenticate and obtain token
-        auth_resp = req.post(
-            f"{base_url}/user/login",
-            json={'user': username, 'pwd': password},
-            verify=False,
-            timeout=15,
-        )
-        if auth_resp.status_code == 401:
-            return jsonify({'error': 'DNIF authentication failed. Check your credentials.'}), 401
-        if not auth_resp.ok:
-            return jsonify({'error': f'DNIF login failed ({auth_resp.status_code})'}), 502
-
-        token = auth_resp.json().get('token') or auth_resp.json().get('data', {}).get('token', '')
-        if not token:
-            return jsonify({'error': 'DNIF returned no token. Check credentials and instance URL.'}), 502
-
-        # Step 2 – execute DQL query
-        query_resp = req.post(
-            f"{base_url}/api/pql/query",
-            headers={'Authorization': token, 'Content-Type': 'application/json'},
-            json={'query': query, 'limit': limit},
+        # Step 1: Submit the DQL job
+        invoke_resp = req.post(
+            f"{base_url}/{tenant_id}/wrk/api/job/invoke",
+            headers=hdrs,
+            json={
+                'query_timezone': tz,
+                'scope_id': scope_id,
+                'job_type': 'dql',
+                'job_execution': 'on-demand',
+                'query': query,
+            },
             verify=False,
             timeout=30,
         )
-        if query_resp.status_code in (401, 403):
-            return jsonify({'error': 'DNIF query rejected — token may have expired.'}), 401
-        if not query_resp.ok:
-            return jsonify({'error': f'DNIF query failed ({query_resp.status_code}): {query_resp.text[:200]}'}), 502
 
-        result = query_resp.json()
-        # DNIF may nest results under 'data' or return them at top level as a list
-        rows = result if isinstance(result, list) else result.get('data', result.get('events', []))
+        if invoke_resp.status_code in (401, 403):
+            return jsonify({'error': 'DNIF token rejected. Regenerate from system → token page.'}), 401
+        if not invoke_resp.ok:
+            return jsonify({
+                'error': f'DNIF invoke failed (HTTP {invoke_resp.status_code}): {invoke_resp.text[:200]}'
+            }), 502
+
+        invoke_data = invoke_resp.json()
+        if invoke_data.get('status') != 'success':
+            return jsonify({
+                'error': f'DNIF job submission failed: {invoke_data.get("message", str(invoke_data))}'
+            }), 502
+
+        task_items = invoke_data.get('data', [])
+        if not task_items:
+            return jsonify({'error': 'DNIF returned no task ID.'}), 502
+        task_id = task_items[0].get('id') or task_items[0].get('task_id')
+        if not task_id:
+            return jsonify({'error': 'Could not extract task ID from DNIF response.'}), 502
+
+        # Step 2: Poll task state (up to ~30s)
+        state_url  = f"{base_url}/{tenant_id}/wrk/api/dispatcher/task/state/{task_id}"
+        result_url = f"{base_url}/{tenant_id}/wrk/api/dispatcher/task/result/{task_id}"
+        completed  = False
+        for _ in range(10):
+            time.sleep(3)
+            try:
+                state_resp = req.get(state_url, headers=hdrs, verify=False, timeout=15)
+                if state_resp.ok:
+                    sd = state_resp.json()
+                    ts = str(sd.get('task_state', '')).upper()
+                    if ts in ('SUCCESS', 'DONE', 'COMPLETED', 'EXECUTED'):
+                        completed = True
+                        break
+                    if ts in ('FAILED', 'ERROR', 'CANCELLED'):
+                        return jsonify({'error': f'DNIF job failed with state: {ts}'}), 502
+            except Exception:
+                pass
+
+        if not completed:
+            return jsonify({'error': 'DNIF job timed out after 30s. Try a narrower time range.'}), 504
+
+        # Step 3: Fetch results
+        res_resp = req.get(
+            result_url,
+            headers=hdrs,
+            params={'pagesize': limit, 'pageno': 1},
+            verify=False,
+            timeout=30,
+        )
+        if not res_resp.ok:
+            return jsonify({'error': f'DNIF result fetch failed (HTTP {res_resp.status_code})'}), 502
+
+        res_data = res_resp.json()
+        rows = res_data.get('result') or res_data.get('data') or []
 
         if not rows:
-            return jsonify({'error': 'No events returned. Adjust your DQL query or time range.'}), 400
+            return jsonify({'error': 'No events returned. Check your token, scope, and DQL query.'}), 400
 
         events = []
         for row in rows:
-            timestamp = (
-                row.get('$Time') or row.get('timestamp') or
-                row.get('_time') or datetime.now().isoformat()
-            )
+            if not isinstance(row, dict):
+                continue
+
+            # Timestamp: prefer $CNAMTime (epoch ms), then string fields
+            ts_raw = row.get('$CNAMTime') or row.get('$SystemTstamp') or row.get('$Time')
+            if ts_raw and str(ts_raw).isdigit() and len(str(ts_raw)) >= 13:
+                try:
+                    timestamp = datetime.fromtimestamp(int(ts_raw) / 1000).isoformat()
+                except Exception:
+                    timestamp = datetime.now().isoformat()
+            else:
+                timestamp = str(ts_raw) if ts_raw else datetime.now().isoformat()
+
             source = (
-                row.get('$HName') or row.get('hostname') or
-                row.get('$SrcIP') or 'dnif'
+                row.get('$DevSrcIP') or row.get('$SrcIP') or
+                row.get('$PicoSystemName') or row.get('$Hostname') or 'dnif'
             )
+
+            # Prefer parsed fields; fall back to raw $LogEvent JSON
             description = (
-                row.get('$Message') or row.get('message') or
-                row.get('$EVTLogName') or str(row)
+                row.get('$Message') or row.get('$EventName') or
+                row.get('$Action') or row.get('$OperationName')
             )
-            events.append({'timestamp': timestamp, 'source': source, 'description': description})
+            if not description:
+                log_event = row.get('$LogEvent', '')
+                if log_event:
+                    try:
+                        le = json.loads(log_event) if isinstance(log_event, str) else log_event
+                        description = (
+                            le.get('message') or le.get('event', {}).get('action') or
+                            le.get('winlog', {}).get('event_data', {}).get('Description') or
+                            str(log_event)[:300]
+                        )
+                    except Exception:
+                        description = str(log_event)[:300]
+            if not description:
+                description = str(row)[:300]
+
+            events.append({'timestamp': timestamp, 'source': str(source), 'description': str(description)})
 
         return process_events(events, source_label='dnif')
 
     except req.exceptions.ConnectionError:
-        return jsonify({'error': f'Could not connect to {base_url}. Check the URL and network.'}), 502
+        return jsonify({'error': f'Could not connect to {base_url}. Check the URL.'}), 502
     except req.exceptions.Timeout:
-        return jsonify({'error': 'DNIF query timed out.'}), 504
+        return jsonify({'error': 'DNIF request timed out.'}), 504
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

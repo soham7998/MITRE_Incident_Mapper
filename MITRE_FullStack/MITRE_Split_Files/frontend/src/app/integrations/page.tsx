@@ -276,9 +276,9 @@ function RawForm({ onResult }: { onResult: (r: AnalysisResult) => void }) {
 
 function DNIFForm({ onResult }: { onResult: (r: AnalysisResult) => void }) {
   const [url, setUrl]         = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [query, setQuery]     = useState('stream=AUTHENTICATION fetch last 1h');
+  const [token, setToken]     = useState('');
+  const [scopeId, setScopeId] = useState('');
+  const [query, setQuery]     = useState('stream=* | duration 1d');
   const [limit, setLimit]     = useState('500');
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
@@ -289,7 +289,10 @@ function DNIFForm({ onResult }: { onResult: (r: AnalysisResult) => void }) {
       const res = await fetch(`${API_URL}/api/integrations/dnif`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, username, password, query, limit: parseInt(limit) }),
+        body: JSON.stringify({
+          url, token, query, limit: parseInt(limit),
+          ...(scopeId.trim() ? { scope_id: scopeId.trim() } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
@@ -301,38 +304,67 @@ function DNIFForm({ onResult }: { onResult: (r: AnalysisResult) => void }) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-slate-500">
-        Connect to your DNIF Hypercloud instance using the console URL and credentials.
+        Connect to DNIF Hypercloud using your console URL and an API token.
         Queries use{' '}
         <span className="font-mono text-xs bg-slate-100 px-1 rounded">DQL</span>
         {' '}— DNIF&apos;s native query language.
       </p>
-      <Field label="DNIF Console URL" hint="e.g. https://tenant.hypercloud.dnif.in">
+
+      {/* Step-by-step instructions */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800 space-y-2">
+        <p className="font-semibold">Two separate things — URL and Token:</p>
+        <div className="space-y-1">
+          <p>
+            <span className="font-semibold">① Console URL</span> — the address bar URL when you are on the{' '}
+            <span className="font-mono bg-blue-100 px-1 rounded">System → Manage Tokens</span> page.
+            It always ends with <span className="font-mono bg-blue-100 px-1 rounded">/system/token</span>.
+          </p>
+          <p className="font-mono text-blue-700 break-all">
+            https://ap1.dnif.cloud/#/&lt;tenant-uuid&gt;/training/system/token
+          </p>
+        </div>
+        <div className="space-y-1">
+          <p>
+            <span className="font-semibold">② API Token</span> — the hex string <em>shown on</em> that page.
+            Do <strong>not</strong> put it inside the URL.
+          </p>
+          <p className="font-mono text-blue-700">04a74349ccc34b4b9e8be0c1eeec6e9a</p>
+        </div>
+      </div>
+
+      <Field
+        label="① Console URL"
+        hint="Browser address bar URL — must end with /system/token"
+      >
         <input value={url} onChange={e => setUrl(e.target.value)}
-          placeholder="https://tenant.hypercloud.dnif.in"
+          placeholder="https://ap1.dnif.cloud/#/<tenant-uuid>/training/system/token"
+          className="input" />
+      </Field>
+      <Field
+        label="② API Token"
+        hint="The hex token value shown on the Manage Tokens page — separate from the URL above"
+      >
+        <input value={token} onChange={e => setToken(e.target.value)} type="password"
+          placeholder="e.g. 04a74349ccc34b4b9e8be0c1eeec6e9a"
           className="input" />
       </Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Username">
-          <input value={username} onChange={e => setUsername(e.target.value)}
-            placeholder="admin"
+        <Field label="Scope ID" hint="e.g. training, default (auto-detected from URL)">
+          <input value={scopeId} onChange={e => setScopeId(e.target.value)}
+            placeholder="auto-detected"
             className="input" />
         </Field>
-        <Field label="Password">
-          <input value={password} onChange={e => setPassword(e.target.value)} type="password"
-            placeholder="••••••••••••••••"
-            className="input" />
+        <Field label="Max events">
+          <input value={limit} onChange={e => setLimit(e.target.value)} type="number"
+            className="input w-full" />
         </Field>
       </div>
-      <Field label="DQL Query" hint="stream · fetch · filter">
+      <Field label="DQL Query" hint="stream=* | duration 1d  ·  stream=AUTHENTICATION | duration 7d  ·  _fetch * from event limit 500">
         <input value={query} onChange={e => setQuery(e.target.value)}
           className="input font-mono text-sm" />
       </Field>
-      <Field label="Max events">
-        <input value={limit} onChange={e => setLimit(e.target.value)} type="number"
-          className="input w-32" />
-      </Field>
       {error && <ErrorMsg msg={error} />}
-      <RunBtn loading={loading} onClick={run} disabled={!url || !username || !password} />
+      <RunBtn loading={loading} onClick={run} disabled={!url || !token} />
     </div>
   );
 }
