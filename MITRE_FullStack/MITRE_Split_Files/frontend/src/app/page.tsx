@@ -298,14 +298,6 @@ export default function Home() {
                   <BookOpen className="w-4 h-4 text-blue-600" />
                   <span className="text-sm font-semibold text-slate-900">How MITRE Mapping Works</span>
                 </div>
-                <a
-                  href="https://github.com/soham7998/MITRE_Incident_Mapper/blob/main/MITRE_FullStack/MITRE_Split_Files/backend/src/mitre_mapper.py"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 font-medium"
-                >
-                  View source on GitHub <ExternalLink className="w-3 h-3" />
-                </a>
               </div>
               <div className="grid grid-cols-4 divide-x divide-slate-100">
                 {[

@@ -46,12 +46,13 @@ const ALL_TACTICS = [
 
 // ── connector tab types ───────────────────────────────────────────────────────
 
-type Tab = 'splunk' | 'elastic' | 'cloudtrail' | 'raw';
+type Tab = 'splunk' | 'elastic' | 'cloudtrail' | 'dnif' | 'raw';
 
 const TABS: { id: Tab; label: string; badge?: string }[] = [
   { id: 'splunk',      label: 'Splunk' },
   { id: 'elastic',     label: 'Elasticsearch' },
   { id: 'cloudtrail',  label: 'AWS CloudTrail' },
+  { id: 'dnif',        label: 'DNIF Hypercloud' },
   { id: 'raw',         label: 'Paste Logs',    badge: 'syslog · CEF' },
 ];
 
@@ -269,6 +270,69 @@ function RawForm({ onResult }: { onResult: (r: AnalysisResult) => void }) {
       </Field>
       {error && <ErrorMsg msg={error} />}
       <RunBtn loading={loading} onClick={run} disabled={!text.trim()} />
+    </div>
+  );
+}
+
+function DNIFForm({ onResult }: { onResult: (r: AnalysisResult) => void }) {
+  const [url, setUrl]         = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [query, setQuery]     = useState('stream=AUTHENTICATION fetch last 1h');
+  const [limit, setLimit]     = useState('500');
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState('');
+
+  const run = async () => {
+    setLoading(true); setError('');
+    try {
+      const res = await fetch(`${API_URL}/api/integrations/dnif`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, username, password, query, limit: parseInt(limit) }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      onResult(data);
+    } catch (e: any) { setError(e.message); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-slate-500">
+        Connect to your DNIF Hypercloud instance using the console URL and credentials.
+        Queries use{' '}
+        <span className="font-mono text-xs bg-slate-100 px-1 rounded">DQL</span>
+        {' '}— DNIF&apos;s native query language.
+      </p>
+      <Field label="DNIF Console URL" hint="e.g. https://tenant.hypercloud.dnif.in">
+        <input value={url} onChange={e => setUrl(e.target.value)}
+          placeholder="https://tenant.hypercloud.dnif.in"
+          className="input" />
+      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Username">
+          <input value={username} onChange={e => setUsername(e.target.value)}
+            placeholder="admin"
+            className="input" />
+        </Field>
+        <Field label="Password">
+          <input value={password} onChange={e => setPassword(e.target.value)} type="password"
+            placeholder="••••••••••••••••"
+            className="input" />
+        </Field>
+      </div>
+      <Field label="DQL Query" hint="stream · fetch · filter">
+        <input value={query} onChange={e => setQuery(e.target.value)}
+          className="input font-mono text-sm" />
+      </Field>
+      <Field label="Max events">
+        <input value={limit} onChange={e => setLimit(e.target.value)} type="number"
+          className="input w-32" />
+      </Field>
+      {error && <ErrorMsg msg={error} />}
+      <RunBtn loading={loading} onClick={run} disabled={!url || !username || !password} />
     </div>
   );
 }
@@ -522,6 +586,7 @@ export default function IntegrationsPage() {
           {activeTab === 'splunk'     && <SplunkForm      onResult={setResult} />}
           {activeTab === 'elastic'    && <ElasticForm     onResult={setResult} />}
           {activeTab === 'cloudtrail' && <CloudTrailForm  onResult={setResult} />}
+          {activeTab === 'dnif'       && <DNIFForm        onResult={setResult} />}
           {activeTab === 'raw'        && <RawForm         onResult={setResult} />}
         </div>
 

@@ -3,13 +3,18 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'MITRE ATT&CK Incident Mapper',
-  description: 'Convert security logs to MITRE ATT&CK incident timelines with automatic technique mapping and PDF reports',
+  description: 'Automated security log analysis with MITRE mapping',
   keywords: ['MITRE', 'ATT&CK', 'SOC', 'Incident Response', 'Cybersecurity', 'Threat Intelligence'],
   authors: [{ name: 'Soham Shah' }],
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+  },
   openGraph: {
     title: 'MITRE ATT&CK Incident Mapper',
     description: 'Automated security log analysis with MITRE mapping',
     type: 'website',
+    url: 'https://mitre-incident-mapper.vercel.app',
   },
 };
 

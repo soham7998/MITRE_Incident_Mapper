@@ -1,0 +1,233 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 627" width="1200" height="627">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb"/>
+      <stop offset="100%" style="stop-color:#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="accentLine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2563eb"/>
+      <stop offset="50%" style="stop-color:#dc2626"/>
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:0"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <clipPath id="roundedRight">
+      <rect x="560" y="0" width="640" height="627" rx="0"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="627" fill="url(#bgGrad)"/>
+
+  <!-- Subtle grid lines -->
+  <g stroke="#1e293b" stroke-width="1" opacity="0.6">
+    <line x1="0" y1="104" x2="1200" y2="104"/>
+    <line x1="0" y1="208" x2="1200" y2="208"/>
+    <line x1="0" y1="312" x2="1200" y2="312"/>
+    <line x1="0" y1="416" x2="1200" y2="416"/>
+    <line x1="0" y1="520" x2="1200" y2="520"/>
+    <line x1="150" y1="0" x2="150" y2="627"/>
+    <line x1="300" y1="0" x2="300" y2="627"/>
+    <line x1="450" y1="0" x2="450" y2="627"/>
+    <line x1="600" y1="0" x2="600" y2="627"/>
+    <line x1="750" y1="0" x2="750" y2="627"/>
+    <line x1="900" y1="0" x2="900" y2="627"/>
+    <line x1="1050" y1="0" x2="1050" y2="627"/>
+  </g>
+
+  <!-- Top accent line -->
+  <rect x="0" y="0" width="1200" height="4" fill="url(#accentLine)"/>
+
+  <!-- Left panel content -->
+  <!-- Shield icon -->
+  <rect x="60" y="72" width="56" height="56" rx="14" fill="url(#shieldGrad)"/>
+  <path d="M88 82 L72 88 v10 c0 7 5.3 13.4 16 15 10.7-1.6 16-8 16-15 V88 Z" fill="white" opacity="0.9"/>
+  <path d="M88 87 L76 91.5 v7 c0 4.8 3.6 9.2 12 10.3 8.4-1.1 12-5.5 12-10.3 v-7 Z" fill="white" opacity="0.2"/>
+  <text x="88" y="107" text-anchor="middle" font-family="Georgia,serif" font-weight="bold" font-size="13" fill="white">M</text>
+
+  <!-- Badge -->
+  <rect x="130" y="80" width="130" height="22" rx="11" fill="#dc2626" opacity="0.15" stroke="#dc2626" stroke-width="1"/>
+  <text x="195" y="95" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="11" font-weight="600" fill="#f87171" letter-spacing="1">OPEN SOURCE</text>
+
+  <!-- Main title -->
+  <text x="60" y="184" font-family="'Segoe UI',Arial,sans-serif" font-size="42" font-weight="700" fill="white">MITRE ATT&amp;CK</text>
+  <text x="60" y="236" font-family="'Segoe UI',Arial,sans-serif" font-size="42" font-weight="700" fill="#60a5fa">Incident Mapper</text>
+
+  <!-- Subtitle -->
+  <text x="60" y="282" font-family="'Segoe UI',Arial,sans-serif" font-size="18" fill="#94a3b8" font-weight="400">Automated security log analysis with MITRE mapping</text>
+
+  <!-- Divider -->
+  <rect x="60" y="308" width="420" height="1" fill="#334155"/>
+
+  <!-- Feature list -->
+  <!-- Feature 1 -->
+  <rect x="60" y="330" width="28" height="28" rx="7" fill="#1d4ed8" opacity="0.3"/>
+  <text x="74" y="349" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="14" fill="#60a5fa">⊕</text>
+  <text x="100" y="349" font-family="'Segoe UI',Arial,sans-serif" font-size="15" font-weight="600" fill="white">Auto Technique Mapping</text>
+  <text x="100" y="368" font-family="'Segoe UI',Arial,sans-serif" font-size="13" fill="#64748b">120+ MITRE ATT&amp;CK patterns across all tactics</text>
+
+  <!-- Feature 2 -->
+  <rect x="60" y="392" width="28" height="28" rx="7" fill="#7c3aed" opacity="0.3"/>
+  <text x="74" y="411" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="14" fill="#a78bfa">◈</text>
+  <text x="100" y="411" font-family="'Segoe UI',Arial,sans-serif" font-size="15" font-weight="600" fill="white">Interactive Kill Chain Timeline</text>
+  <text x="100" y="430" font-family="'Segoe UI',Arial,sans-serif" font-size="13" fill="#64748b">Visual ATT&amp;CK heatmap with event correlation</text>
+
+  <!-- Feature 3 -->
+  <rect x="60" y="454" width="28" height="28" rx="7" fill="#059669" opacity="0.3"/>
+  <text x="74" y="473" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="14" fill="#34d399">↓</text>
+  <text x="100" y="473" font-family="'Segoe UI',Arial,sans-serif" font-size="15" font-weight="600" fill="white">Compliance-Ready PDF Reports</text>
+  <text x="100" y="492" font-family="'Segoe UI',Arial,sans-serif" font-size="13" fill="#64748b">Export to PDF, JSON, CSV — SOC &amp; IR ready</text>
+
+  <!-- URL bar at bottom -->
+  <rect x="60" y="548" width="440" height="38" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  <circle cx="84" cy="567" r="5" fill="#22c55e"/>
+  <text x="98" y="572" font-family="'JetBrains Mono',monospace,sans-serif" font-size="13" fill="#475569">mitre-incident-mapper.vercel.app</text>
+
+  <!-- Right panel — ATT&CK heatmap mockup -->
+  <rect x="580" y="0" width="620" height="627" fill="#0f172a" opacity="0.5"/>
+
+  <!-- Panel header -->
+  <rect x="600" y="50" width="560" height="44" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <circle cx="624" cy="72" r="6" fill="#ef4444" opacity="0.8"/>
+  <circle cx="644" cy="72" r="6" fill="#f59e0b" opacity="0.8"/>
+  <circle cx="664" cy="72" r="6" fill="#22c55e" opacity="0.8"/>
+  <text x="700" y="77" font-family="'Segoe UI',Arial,sans-serif" font-size="13" fill="#64748b">ATT&amp;CK Heatmap — 7 of 12 tactics detected</text>
+
+  <!-- Tactic columns -->
+  <!-- Initial Access - active -->
+  <rect x="600" y="112" width="72" height="130" rx="6" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="636" y="130" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="9" font-weight="700" fill="#f87171">Initial</text>
+  <text x="636" y="141" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="9" font-weight="700" fill="#f87171">Access</text>
+  <rect x="608" y="150" width="56" height="36" rx="4" fill="#dc2626"/>
+  <text x="636" y="165" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="white">T1078</text>
+  <text x="636" y="177" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="8" fill="#fca5a5">Valid Accts</text>
+  <rect x="608" y="192" width="56" height="36" rx="4" fill="#b91c1c"/>
+  <text x="636" y="207" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="white">T1190</text>
+  <text x="636" y="219" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="8" fill="#fca5a5">Exploit Pub</text>
+
+  <!-- Execution - active -->
+  <rect x="680" y="112" width="72" height="100" rx="6" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="716" y="130" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="9" font-weight="700" fill="#f87171">Execution</text>
+  <rect x="688" y="138" width="56" height="36" rx="4" fill="#dc2626"/>
+  <text x="716" y="153" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="white">T1059</text>
+  <text x="716" y="165" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="8" fill="#fca5a5">Cmd Script</text>
+  <rect x="688" y="180" width="56" height="24" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="716" y="196" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="8" fill="#475569">+1 more</text>
+
+  <!-- Persistence - active -->
+  <rect x="760" y="112" width="72" height="88" rx="6" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="796" y="130" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="9" font-weight="700" fill="#f87171">Persistence</text>
+  <rect x="768" y="138" width="56" height="36" rx="4" fill="#dc2626"/>
+  <text x="796" y="153" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="white">T1547</text>
+  <text x="796" y="165" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="8" fill="#fca5a5">Boot AutoRun</text>
+
+  <!-- Privilege Escalation - inactive -->
+  <rect x="840" y="112" width="72" height="88" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="876" y="130" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="9" font-weight="700" fill="#475569">Priv Esc</text>
+  <text x="876" y="160" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#334155">—</text>
+
+  <!-- Defense Evasion - active -->
+  <rect x="920" y="112" width="72" height="100" rx="6" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="956" y="128" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="9" font-weight="700" fill="#f87171">Defense</text>
+  <text x="956" y="139" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="9" font-weight="700" fill="#f87171">Evasion</text>
+  <rect x="928" y="148" width="56" height="36" rx="4" fill="#dc2626"/>
+  <text x="956" y="163" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="white">T1055</text>
+  <text x="956" y="175" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="8" fill="#fca5a5">Process Inj</text>
+
+  <!-- Credential Access - active -->
+  <rect x="1000" y="112" width="72" height="118" rx="6" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="1036" y="128" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="9" font-weight="700" fill="#f87171">Cred</text>
+  <text x="1036" y="139" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="9" font-weight="700" fill="#f87171">Access</text>
+  <rect x="1008" y="148" width="56" height="36" rx="4" fill="#dc2626"/>
+  <text x="1036" y="163" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="white">T1003</text>
+  <text x="1036" y="175" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="8" fill="#fca5a5">OS Cred Dump</text>
+  <rect x="1008" y="190" width="56" height="32" rx="4" fill="#b91c1c"/>
+  <text x="1036" y="205" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="white">T1110</text>
+  <text x="1036" y="217" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="8" fill="#fca5a5">Brute Force</text>
+
+  <!-- Lateral Movement - active -->
+  <rect x="1080" y="112" width="72" height="88" rx="6" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="1116" y="128" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="9" font-weight="700" fill="#f87171">Lateral</text>
+  <text x="1116" y="139" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="9" font-weight="700" fill="#f87171">Movement</text>
+  <rect x="1088" y="148" width="56" height="36" rx="4" fill="#dc2626"/>
+  <text x="1116" y="163" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="white">T1021</text>
+  <text x="1116" y="175" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="8" fill="#fca5a5">Remote Svcs</text>
+
+  <!-- Timeline panel -->
+  <rect x="600" y="270" width="560" height="200" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="624" y="295" font-family="'Segoe UI',Arial,sans-serif" font-size="13" font-weight="600" fill="#e2e8f0">Event Timeline</text>
+
+  <!-- Timeline events -->
+  <!-- Event 1 -->
+  <circle cx="624" cy="322" r="5" fill="#3b82f6"/>
+  <rect x="635" y="315" width="508" height="26" rx="4" fill="#0f172a"/>
+  <text x="648" y="332" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#94a3b8">Jan 15 09:00:01</text>
+  <text x="740" y="332" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#e2e8f0">Failed SSH login from 192.168.1.1 — brute force detected</text>
+  <rect x="990" y="318" width="42" height="18" rx="9" fill="#dc2626" opacity="0.2" stroke="#dc2626" stroke-width="1"/>
+  <text x="1011" y="331" text-anchor="middle" font-family="monospace" font-size="9" font-weight="600" fill="#f87171">T1110</text>
+
+  <!-- Event 2 -->
+  <rect x="629" y="327" width="1" height="18" fill="#334155"/>
+  <circle cx="624" cy="352" r="5" fill="#8b5cf6"/>
+  <rect x="635" y="345" width="508" height="26" rx="4" fill="#0f172a"/>
+  <text x="648" y="362" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#94a3b8">Jan 15 09:01:23</text>
+  <text x="740" y="362" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#e2e8f0">sudo bash executed — privilege escalation attempt</text>
+  <rect x="990" y="348" width="42" height="18" rx="9" fill="#7c3aed" opacity="0.2" stroke="#7c3aed" stroke-width="1"/>
+  <text x="1011" y="361" text-anchor="middle" font-family="monospace" font-size="9" font-weight="600" fill="#a78bfa">T1059</text>
+
+  <!-- Event 3 -->
+  <rect x="629" y="357" width="1" height="18" fill="#334155"/>
+  <circle cx="624" cy="382" r="5" fill="#ef4444"/>
+  <rect x="635" y="375" width="508" height="26" rx="4" fill="#0f172a"/>
+  <text x="648" y="392" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#94a3b8">Jan 15 09:02:00</text>
+  <text x="740" y="392" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#e2e8f0">powershell.exe -enc [base64] — malware execution</text>
+  <rect x="990" y="378" width="42" height="18" rx="9" fill="#dc2626" opacity="0.2" stroke="#dc2626" stroke-width="1"/>
+  <text x="1011" y="391" text-anchor="middle" font-family="monospace" font-size="9" font-weight="600" fill="#f87171">T1059</text>
+
+  <!-- Event 4 -->
+  <rect x="629" y="387" width="1" height="18" fill="#334155"/>
+  <circle cx="624" cy="412" r="5" fill="#f59e0b"/>
+  <rect x="635" y="405" width="508" height="26" rx="4" fill="#0f172a"/>
+  <text x="648" y="422" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#94a3b8">Jan 15 09:04:11</text>
+  <text x="740" y="422" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#e2e8f0">Credential dump via lsass.exe — lateral movement prep</text>
+  <rect x="990" y="408" width="42" height="18" rx="9" fill="#dc2626" opacity="0.2" stroke="#dc2626" stroke-width="1"/>
+  <text x="1011" y="421" text-anchor="middle" font-family="monospace" font-size="9" font-weight="600" fill="#f87171">T1003</text>
+
+  <!-- Event 5 fade -->
+  <rect x="629" y="417" width="1" height="18" fill="#334155"/>
+  <circle cx="624" cy="442" r="5" fill="#475569"/>
+  <rect x="635" y="435" width="508" height="26" rx="4" fill="#0f172a" opacity="0.5"/>
+  <text x="648" y="452" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#475569">Jan 15 09:07:43</text>
+  <text x="740" y="452" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#475569">RDP connection to 10.0.0.15 — lateral movement</text>
+
+  <!-- Stats bar -->
+  <rect x="600" y="488" width="560" height="72" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+
+  <!-- Stat 1 -->
+  <rect x="620" y="504" width="155" height="40" rx="6" fill="#0f172a"/>
+  <text x="697" y="522" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="18" font-weight="700" fill="#60a5fa">247</text>
+  <text x="697" y="537" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#64748b">Events Parsed</text>
+
+  <!-- Stat 2 -->
+  <rect x="790" y="504" width="155" height="40" rx="6" fill="#0f172a"/>
+  <text x="867" y="522" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="18" font-weight="700" fill="#a78bfa">14</text>
+  <text x="867" y="537" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#64748b">Techniques Found</text>
+
+  <!-- Stat 3 -->
+  <rect x="960" y="504" width="180" height="40" rx="6" fill="#0f172a"/>
+  <text x="1050" y="522" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="18" font-weight="700" fill="#34d399">7 / 12</text>
+  <text x="1050" y="537" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#64748b">Tactics Covered</text>
+
+  <!-- Bottom bar -->
+  <rect x="600" y="576" width="560" height="40" rx="0" fill="#0f172a" opacity="0.6"/>
+  <text x="880" y="601" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="12" fill="#475569">Built by Soham Shah · Open Source on GitHub</text>
+
+  <!-- Vertical divider -->
+  <rect x="575" y="40" width="1" height="547" fill="#1e293b"/>
+</svg>

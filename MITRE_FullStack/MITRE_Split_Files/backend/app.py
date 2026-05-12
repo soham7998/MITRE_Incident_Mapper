@@ -199,6 +199,7 @@ def root():
             'elasticsearch':      'POST /api/integrations/elastic',
             'cloudtrail':         'POST /api/integrations/cloudtrail',
             'raw':                'POST /api/integrations/raw',
+            'dnif':               'POST /api/integrations/dnif',
         },
         'frontend': 'https://mitre-incident-mapper.vercel.app'
     })
@@ -508,6 +509,85 @@ def integrate_raw():
         return jsonify({'error': 'Could not parse log text'}), 400
 
     return process_events(events, source_label=fmt if fmt != 'auto' else 'raw')
+
+@app.route('/api/integrations/dnif', methods=['POST', 'OPTIONS'])
+def integrate_dnif():
+    """Query DNIF Hypercloud via its REST API and run MITRE analysis."""
+    if request.method == 'OPTIONS':
+        return '', 204
+
+    body = request.get_json() or {}
+    base_url = (body.get('url') or '').rstrip('/')
+    username = body.get('username') or ''
+    password = body.get('password') or ''
+    query = body.get('query') or 'stream=AUTHENTICATION fetch last 1h'
+    limit = min(int(body.get('limit') or 500), 2000)
+
+    if not base_url or not username or not password:
+        return jsonify({'error': 'url, username, and password are required'}), 400
+
+    try:
+        # Step 1 – authenticate and obtain token
+        auth_resp = req.post(
+            f"{base_url}/user/login",
+            json={'user': username, 'pwd': password},
+            verify=False,
+            timeout=15,
+        )
+        if auth_resp.status_code == 401:
+            return jsonify({'error': 'DNIF authentication failed. Check your credentials.'}), 401
+        if not auth_resp.ok:
+            return jsonify({'error': f'DNIF login failed ({auth_resp.status_code})'}), 502
+
+        token = auth_resp.json().get('token') or auth_resp.json().get('data', {}).get('token', '')
+        if not token:
+            return jsonify({'error': 'DNIF returned no token. Check credentials and instance URL.'}), 502
+
+        # Step 2 – execute DQL query
+        query_resp = req.post(
+            f"{base_url}/api/pql/query",
+            headers={'Authorization': token, 'Content-Type': 'application/json'},
+            json={'query': query, 'limit': limit},
+            verify=False,
+            timeout=30,
+        )
+        if query_resp.status_code in (401, 403):
+            return jsonify({'error': 'DNIF query rejected — token may have expired.'}), 401
+        if not query_resp.ok:
+            return jsonify({'error': f'DNIF query failed ({query_resp.status_code}): {query_resp.text[:200]}'}), 502
+
+        result = query_resp.json()
+        # DNIF may nest results under 'data' or return them at top level as a list
+        rows = result if isinstance(result, list) else result.get('data', result.get('events', []))
+
+        if not rows:
+            return jsonify({'error': 'No events returned. Adjust your DQL query or time range.'}), 400
+
+        events = []
+        for row in rows:
+            timestamp = (
+                row.get('$Time') or row.get('timestamp') or
+                row.get('_time') or datetime.now().isoformat()
+            )
+            source = (
+                row.get('$HName') or row.get('hostname') or
+                row.get('$SrcIP') or 'dnif'
+            )
+            description = (
+                row.get('$Message') or row.get('message') or
+                row.get('$EVTLogName') or str(row)
+            )
+            events.append({'timestamp': timestamp, 'source': source, 'description': description})
+
+        return process_events(events, source_label='dnif')
+
+    except req.exceptions.ConnectionError:
+        return jsonify({'error': f'Could not connect to {base_url}. Check the URL and network.'}), 502
+    except req.exceptions.Timeout:
+        return jsonify({'error': 'DNIF query timed out.'}), 504
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 # ============================================================================
 # ERROR HANDLERS
